@@ -1,0 +1,127 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { ArrowLeft, MapPin, Calendar, Upload } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+
+export default function BoletimPage() {
+  const [anonymous, setAnonymous] = useState(true)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [location, setLocation] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setShowSuccess(true)
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0f0b1a] pb-6">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 p-6 pb-4">
+          <Link href="/home">
+            <Button variant="ghost" size="icon" className="text-white">
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold text-white">Boletim de Occrrência</h1>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 space-y-6">
+          {/* Map Preview */}
+          <div className="relative h-48 bg-[#1a1625] rounded-2xl border border-[#2b2438] overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <MapPin className="w-12 h-12 text-[#4aa3ff] mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground px-4">
+                  Toque no mapa para selecionar o local da ocorrência
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Endereço aproximado
+            </label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Rua, número, bairro..."
+              className="bg-[#1a1625] border-[#2b2438] text-white"
+            />
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Data Completo
+            </label>
+            <Input type="datetime-local" className="bg-[#1a1625] border-[#2b2438] text-white" />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-sm text-white mb-2 block">Descrição Detalalde da Occrrência</label>
+            <Textarea
+              placeholder="Descreva o que aconteceu com o máximo de detalhes possível..."
+              className="bg-[#1a1625] border-[#2b2438] text-white min-h-32"
+            />
+          </div>
+
+          {/* Photo Upload */}
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Fotos (opcional)
+            </label>
+            <div className="bg-[#1a1625] border-2 border-dashed border-[#2b2438] rounded-xl p-6 text-center hover:border-[#4aa3ff] transition-colors cursor-pointer">
+              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Toque para adicionar fotos</p>
+            </div>
+          </div>
+
+          {/* Anonymous Toggle */}
+          <div className="flex items-center justify-between bg-[#1a1625] rounded-2xl p-4 border border-[#2b2438]">
+            <span className="text-white">Nome Dados (Opcional)</span>
+            <Switch checked={!anonymous} onCheckedChange={(checked) => setAnonymous(!checked)} />
+          </div>
+
+          {/* Submit Button */}
+          <Button type="submit" className="w-full gradient-primary text-white btn-touch text-lg font-semibold">
+            Registrar Boletim
+          </Button>
+        </form>
+      </div>
+
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+          <div className="bg-[#1a1625] rounded-3xl p-8 max-w-sm w-full border border-[#2b2438]">
+            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 text-center">Boletim Registrado</h3>
+            <p className="text-muted-foreground mb-4 text-center">
+              Protocolo: <span className="text-[#4aa3ff] font-mono">BO-2025-{Math.floor(Math.random() * 10000)}</span>
+            </p>
+            <Button onClick={() => setShowSuccess(false)} className="w-full gradient-primary text-white">
+              Fechar
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
