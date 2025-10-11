@@ -1,14 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Maximize2 } from "lucide-react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+
+const CrimeHeatmap = dynamic(
+  () => import("@/components/crime-heatmap").then((mod) => ({ default: mod.CrimeHeatmap })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 flex items-center justify-center bg-[#1a1625]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#4aa3ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white text-sm">Carregando mapa...</p>
+        </div>
+      </div>
+    ),
+  },
+)
 
 export default function MapeamentoPage() {
   const [showHeatmap, setShowHeatmap] = useState(true)
   const [showStations, setShowStations] = useState(false)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude])
+        },
+        (error) => {
+          console.log("[v0] Geolocation error:", error)
+          // Default to São Paulo coordinates
+          setUserLocation([-23.5505, -46.6333])
+        },
+      )
+    } else {
+      setUserLocation([-23.5505, -46.6333])
+    }
+  }, [])
+
+  const crimeData = userLocation
+    ? [
+        { lat: userLocation[0] + 0.005, lng: userLocation[1] + 0.005, intensity: 0.8 },
+        { lat: userLocation[0] - 0.003, lng: userLocation[1] + 0.007, intensity: 0.9 },
+        { lat: userLocation[0] + 0.008, lng: userLocation[1] - 0.004, intensity: 0.7 },
+        { lat: userLocation[0] - 0.006, lng: userLocation[1] - 0.006, intensity: 0.6 },
+        { lat: userLocation[0] + 0.002, lng: userLocation[1] + 0.009, intensity: 0.85 },
+        { lat: userLocation[0] - 0.009, lng: userLocation[1] + 0.002, intensity: 0.75 },
+        { lat: userLocation[0] + 0.007, lng: userLocation[1] + 0.008, intensity: 0.65 },
+        { lat: userLocation[0] - 0.004, lng: userLocation[1] - 0.008, intensity: 0.95 },
+      ]
+    : []
+
+  const policeStations = userLocation
+    ? [
+        { name: "Delegacia Central", lat: userLocation[0], lng: userLocation[1] },
+        { name: "Delegacia Norte", lat: userLocation[0] + 0.015, lng: userLocation[1] - 0.01 },
+        { name: "Delegacia Sul", lat: userLocation[0] - 0.015, lng: userLocation[1] + 0.01 },
+        { name: "Delegacia Leste", lat: userLocation[0] - 0.005, lng: userLocation[1] + 0.02 },
+        { name: "Delegacia Oeste", lat: userLocation[0] + 0.005, lng: userLocation[1] - 0.02 },
+      ]
+    : []
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0b1a] flex flex-col">
@@ -16,7 +84,7 @@ export default function MapeamentoPage() {
       <div className="flex items-center justify-between p-4 border-b border-[#2b2438]">
         <div className="flex items-center gap-3">
           <Link href="/home">
-            <Button variant="ghost" size="icon" className="text-white">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-[#1a1625]">
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
@@ -31,40 +99,50 @@ export default function MapeamentoPage() {
           <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-white text-sm">Localização Deleagaias</span>
+          <span className="text-white text-sm">Localização Delegacias</span>
           <Switch checked={showStations} onCheckedChange={setShowStations} />
         </div>
       </div>
 
       {/* Map Area */}
-      <div className="flex-1 relative bg-[#1a1625]">
-        {/* Placeholder for map - in production, integrate Leaflet here */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-[#4aa3ff]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-[#4aa3ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                />
-              </svg>
-            </div>
-            <p className="text-muted-foreground text-sm">Mapa de calor de criminalidade</p>
-            <p className="text-xs text-muted-foreground mt-2">Integração com Leaflet será implementada aqui</p>
-          </div>
-        </div>
+      <div
+        className="flex-1 relative bg-[#1a1625] overflow-hidden"
+        style={{ minHeight: "500px", height: "calc(100vh - 250px)" }}
+      >
+        {userLocation ? (
+          <>
+            <CrimeHeatmap
+              center={userLocation}
+              zoom={13}
+              crimeData={crimeData}
+              policeStations={policeStations}
+              showHeatmap={showHeatmap}
+              showStations={showStations}
+              className="absolute inset-0"
+            />
 
-        {/* Fullscreen Button */}
-        <button className="absolute top-4 right-4 w-10 h-10 bg-[#1a1625] border border-[#2b2438] rounded-lg flex items-center justify-center hover:border-[#4aa3ff] transition-colors">
-          <Maximize2 className="w-5 h-5 text-white" />
-        </button>
+            {/* Fullscreen Button */}
+            <button
+              onClick={toggleFullscreen}
+              className="absolute top-4 right-4 w-10 h-10 bg-[#1a1625] border border-[#2b2438] rounded-lg flex items-center justify-center hover:border-[#4aa3ff] transition-colors z-[1000]"
+              aria-label="Fullscreen"
+            >
+              <Maximize2 className="w-5 h-5 text-white" />
+            </button>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-[#4aa3ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white text-sm">Obtendo localização...</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Legend */}
       <div className="p-4 border-t border-[#2b2438]">
-        <p className="text-xs text-muted-foreground mb-2">Baixo</p>
+        <p className="text-xs text-muted-foreground mb-2">Intensidade de Criminalidade</p>
         <div
           className="h-3 rounded-full"
           style={{
@@ -73,7 +151,7 @@ export default function MapeamentoPage() {
         />
         <div className="flex justify-between mt-1">
           <span className="text-xs text-muted-foreground">Baixo</span>
-          <span className="text-xs text-muted-foreground">Alto</span>
+          <span className="text-xs text-muted-foreground">Médio</span>
           <span className="text-xs text-muted-foreground">Alto</span>
         </div>
       </div>

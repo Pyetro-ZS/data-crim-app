@@ -2,18 +2,57 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, MapPin, Calendar, Upload } from "lucide-react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 
+const LocationPicker = dynamic(
+  () => import("@/components/location-picker").then((mod) => ({ default: mod.LocationPicker })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-48 bg-[#1a1625] rounded-2xl border border-[#2b2438] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-[#4aa3ff] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">Carregando mapa...</p>
+        </div>
+      </div>
+    ),
+  },
+)
+
 export default function BoletimPage() {
   const [anonymous, setAnonymous] = useState(true)
   const [showSuccess, setShowSuccess] = useState(false)
   const [location, setLocation] = useState("")
+  const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude])
+        },
+        () => {
+          // Default to São Paulo
+          setUserLocation([-23.5505, -46.6333])
+        },
+      )
+    } else {
+      setUserLocation([-23.5505, -46.6333])
+    }
+  }, [])
+
+  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+    setSelectedCoords({ lat, lng })
+    setLocation(address)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +65,7 @@ export default function BoletimPage() {
         {/* Header */}
         <div className="flex items-center gap-4 p-6 pb-4">
           <Link href="/home">
-            <Button variant="ghost" size="icon" className="text-white">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-[#1a1625]">
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
@@ -34,16 +73,17 @@ export default function BoletimPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 space-y-6">
-          {/* Map Preview */}
-          <div className="relative h-48 bg-[#1a1625] rounded-2xl border border-[#2b2438] overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-[#4aa3ff] mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground px-4">
-                  Toque no mapa para selecionar o local da ocorrência
-                </p>
+          <div className="relative h-48 rounded-2xl overflow-hidden border border-[#2b2438]">
+            {userLocation ? (
+              <LocationPicker center={userLocation} zoom={15} onLocationSelect={handleLocationSelect} />
+            ) : (
+              <div className="h-full bg-[#1a1625] flex items-center justify-center">
+                <div className="text-center">
+                  <MapPin className="w-12 h-12 text-[#4aa3ff] mx-auto mb-2 animate-pulse" />
+                  <p className="text-sm text-muted-foreground px-4">Obtendo localização...</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Address */}
@@ -55,7 +95,7 @@ export default function BoletimPage() {
             <Input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Rua, número, bairro..."
+              placeholder="Toque no mapa ou digite o endereço..."
               className="bg-[#1a1625] border-[#2b2438] text-white"
             />
           </div>
