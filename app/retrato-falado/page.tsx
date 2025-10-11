@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { ArrowLeft, Sparkles, Download, Share2, RefreshCw, AlertCircle } from "lucide-react"
+import { ArrowLeft, Sparkles, Download, Share2, RefreshCw, AlertCircle, CheckCircle, Info } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,8 +32,10 @@ interface PortraitData {
 
 export default function RetratoFaladoPage() {
   const [generating, setGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState(0)
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [formData, setFormData] = useState<PortraitData>({
     sex: "",
     age: "",
@@ -86,9 +88,10 @@ export default function RetratoFaladoPage() {
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccessMessage(null)
     setGenerating(true)
+    setGenerationProgress(0)
 
-    // Validate required fields
     if (!formData.sex) {
       setError("Por favor, selecione o sexo")
       setGenerating(false)
@@ -99,22 +102,41 @@ export default function RetratoFaladoPage() {
       const prompt = buildPrompt()
       console.log("[v0] Generated prompt:", prompt)
 
-      // Call API to generate image
+      const progressInterval = setInterval(() => {
+        setGenerationProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 300)
+
       const response = await fetch("/api/generate-portrait", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, formData }),
       })
 
+      clearInterval(progressInterval)
+      setGenerationProgress(100)
+
       if (!response.ok) {
         throw new Error("Falha ao gerar retrato")
       }
 
       const data = await response.json()
-      setGeneratedImage(data.imageUrl)
+
+      if (data.success) {
+        setGeneratedImage(data.imageUrl)
+        setSuccessMessage("Retrato gerado com sucesso!")
+      } else {
+        throw new Error(data.error || "Erro ao gerar retrato")
+      }
     } catch (err) {
       console.error("[v0] Error generating portrait:", err)
-      setError("Não foi possível gerar o retrato. Por favor, tente novamente.")
+      setError("Não foi possível gerar o retrato. Por favor, verifique os dados e tente novamente.")
+      setGenerationProgress(0)
     } finally {
       setGenerating(false)
     }
@@ -123,12 +145,18 @@ export default function RetratoFaladoPage() {
   const handleDownload = () => {
     if (!generatedImage) return
 
+    const timestamp = new Date().toISOString().split("T")[0]
+    const filename = `retrato-falado-datacrim-${timestamp}.png`
+
     const link = document.createElement("a")
     link.href = generatedImage
-    link.download = `retrato-falado-${Date.now()}.png`
+    link.download = filename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+
+    setSuccessMessage("Retrato baixado com sucesso!")
+    setTimeout(() => setSuccessMessage(null), 3000)
   }
 
   const handleShare = async () => {
@@ -138,29 +166,36 @@ export default function RetratoFaladoPage() {
       try {
         await navigator.share({
           title: "Retrato Falado - DataCrim",
-          text: "Retrato gerado pelo sistema DataCrim",
-          url: generatedImage,
+          text: "Retrato gerado pelo sistema DataCrim de identificação criminal",
+          url: window.location.href,
         })
+        setSuccessMessage("Compartilhado com sucesso!")
+        setTimeout(() => setSuccessMessage(null), 3000)
       } catch (err) {
         console.log("[v0] Share cancelled or failed:", err)
       }
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(generatedImage)
-      alert("Link copiado para a área de transferência!")
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        setSuccessMessage("Link copiado para a área de transferência!")
+        setTimeout(() => setSuccessMessage(null), 3000)
+      } catch (err) {
+        setError("Não foi possível compartilhar")
+      }
     }
   }
 
   const handleReset = () => {
     setGeneratedImage(null)
     setError(null)
+    setSuccessMessage(null)
+    setGenerationProgress(0)
   }
 
   if (generatedImage) {
     return (
       <div className="min-h-screen bg-[#0f0b1a] p-6">
         <div className="max-w-md mx-auto">
-          {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Button variant="ghost" size="icon" className="text-white" onClick={handleReset}>
               <ArrowLeft className="w-6 h-6" />
@@ -168,9 +203,15 @@ export default function RetratoFaladoPage() {
             <h1 className="text-xl font-bold text-white">Retrato Gerado</h1>
           </div>
 
-          {/* Generated Image */}
+          {successMessage && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-500">{successMessage}</p>
+            </div>
+          )}
+
           <div className="bg-[#1a1625] border border-[#2b2438] rounded-2xl p-6 mb-6">
-            <div className="relative aspect-square w-full mb-4 rounded-xl overflow-hidden bg-[#0f0b1a]">
+            <div className="relative aspect-square w-full mb-4 rounded-xl overflow-hidden bg-[#0f0b1a] border border-[#2b2438]">
               <Image
                 src={generatedImage || "/placeholder.svg"}
                 alt="Retrato Falado Gerado"
@@ -179,11 +220,19 @@ export default function RetratoFaladoPage() {
               />
             </div>
 
-            <p className="text-sm text-muted-foreground text-center mb-4">
-              Retrato gerado com base nas características fornecidas
-            </p>
+            <div className="bg-[#0f0b1a] border border-[#2b2438] rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-[#4aa3ff] flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-white font-semibold mb-1">Retrato Gerado por IA</p>
+                  <p className="text-xs text-muted-foreground">
+                    Este retrato foi gerado com base nas características fornecidas. Pode ser usado para fins de
+                    identificação e investigação criminal.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={handleDownload}
@@ -202,7 +251,6 @@ export default function RetratoFaladoPage() {
             </div>
           </div>
 
-          {/* Generate Another */}
           <Button
             onClick={handleReset}
             className="w-full gradient-primary text-white btn-touch text-lg font-semibold flex items-center justify-center gap-2"
@@ -224,7 +272,6 @@ export default function RetratoFaladoPage() {
   return (
     <div className="min-h-screen bg-[#0f0b1a] p-6 pb-20">
       <div className="max-w-md mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link href="/home">
             <Button variant="ghost" size="icon" className="text-white">
@@ -234,7 +281,6 @@ export default function RetratoFaladoPage() {
           <h1 className="text-xl font-bold text-white">Retrato Falado (IA)</h1>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -242,8 +288,27 @@ export default function RetratoFaladoPage() {
           </div>
         )}
 
+        {generating && (
+          <div className="bg-[#1a1625] border border-[#2b2438] rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 border-2 border-[#4aa3ff] border-t-transparent rounded-full animate-spin" />
+              <div className="flex-1">
+                <p className="text-white font-semibold mb-1">Gerando Retrato...</p>
+                <p className="text-xs text-muted-foreground">A IA está processando as características fornecidas</p>
+              </div>
+            </div>
+
+            <div className="w-full bg-[#0f0b1a] rounded-full h-2 overflow-hidden">
+              <div
+                className="h-full gradient-primary transition-all duration-300 ease-out"
+                style={{ width: `${generationProgress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">{generationProgress}% concluído</p>
+          </div>
+        )}
+
         <form onSubmit={handleGenerate} className="space-y-6">
-          {/* Sex - Required */}
           <div>
             <Label className="text-sm text-white mb-3 block">
               Sexo <span className="text-red-500">*</span>
@@ -274,7 +339,6 @@ export default function RetratoFaladoPage() {
             </div>
           </div>
 
-          {/* Age */}
           <div>
             <Label htmlFor="age" className="text-sm text-white mb-2 block">
               Idade Aproximada
@@ -289,7 +353,6 @@ export default function RetratoFaladoPage() {
             />
           </div>
 
-          {/* Skin Tone */}
           <div>
             <Label htmlFor="skinTone" className="text-sm text-white mb-2 block">
               Tom de Pele
@@ -310,7 +373,6 @@ export default function RetratoFaladoPage() {
             </select>
           </div>
 
-          {/* Face Shape */}
           <div>
             <Label htmlFor="faceShape" className="text-sm text-white mb-2 block">
               Formato do Rosto
@@ -331,7 +393,6 @@ export default function RetratoFaladoPage() {
             </select>
           </div>
 
-          {/* Hair Section */}
           <div className="space-y-4 bg-[#1a1625] border border-[#2b2438] rounded-xl p-4">
             <h3 className="text-white font-semibold">Cabelo</h3>
 
@@ -393,7 +454,6 @@ export default function RetratoFaladoPage() {
             </div>
           </div>
 
-          {/* Eyes Section */}
           <div className="space-y-4 bg-[#1a1625] border border-[#2b2438] rounded-xl p-4">
             <h3 className="text-white font-semibold">Olhos</h3>
 
@@ -438,7 +498,6 @@ export default function RetratoFaladoPage() {
             </div>
           </div>
 
-          {/* Nose */}
           <div>
             <Label htmlFor="noseShape" className="text-sm text-white mb-2 block">
               Formato do Nariz
@@ -459,7 +518,6 @@ export default function RetratoFaladoPage() {
             </select>
           </div>
 
-          {/* Mouth */}
           <div>
             <Label htmlFor="mouthShape" className="text-sm text-white mb-2 block">
               Formato da Boca
@@ -479,7 +537,6 @@ export default function RetratoFaladoPage() {
             </select>
           </div>
 
-          {/* Facial Hair (only for males) */}
           {formData.sex === "masculino" && (
             <div>
               <Label htmlFor="facialHair" className="text-sm text-white mb-2 block">
@@ -504,7 +561,6 @@ export default function RetratoFaladoPage() {
             </div>
           )}
 
-          {/* Build */}
           <div>
             <Label htmlFor="build" className="text-sm text-white mb-2 block">
               Estrutura Corporal
@@ -526,7 +582,6 @@ export default function RetratoFaladoPage() {
             </select>
           </div>
 
-          {/* Height */}
           <div>
             <Label htmlFor="height" className="text-sm text-white mb-2 block">
               Altura Aproximada
@@ -541,7 +596,6 @@ export default function RetratoFaladoPage() {
             />
           </div>
 
-          {/* Distinctive Features */}
           <div>
             <Label htmlFor="distinctiveFeatures" className="text-sm text-white mb-2 block">
               Características Distintivas
@@ -555,7 +609,6 @@ export default function RetratoFaladoPage() {
             />
           </div>
 
-          {/* Clothing */}
           <div>
             <Label htmlFor="clothing" className="text-sm text-white mb-2 block">
               Vestimenta
@@ -570,7 +623,6 @@ export default function RetratoFaladoPage() {
             />
           </div>
 
-          {/* Location */}
           <div>
             <Label htmlFor="location" className="text-sm text-white mb-2 block">
               Local do Incidente
@@ -585,11 +637,10 @@ export default function RetratoFaladoPage() {
             />
           </div>
 
-          {/* Generate Button */}
           <Button
             type="submit"
             disabled={generating}
-            className="w-full gradient-primary text-white btn-touch text-lg font-semibold flex items-center justify-center gap-2"
+            className="w-full gradient-primary text-white btn-touch text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {generating ? (
               <>
@@ -604,12 +655,24 @@ export default function RetratoFaladoPage() {
             )}
           </Button>
 
-          {/* Info */}
-          <div className="bg-[#1a1625] border border-[#2b2438] rounded-xl p-4">
-            <p className="text-xs text-muted-foreground">
-              <strong className="text-white">Dica:</strong> Quanto mais detalhes você fornecer, mais preciso será o
-              retrato gerado pela IA. Preencha o máximo de campos possível para obter o melhor resultado.
-            </p>
+          <div className="bg-[#1a1625] border border-[#2b2438] rounded-xl p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-[#4aa3ff] flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-white font-semibold mb-1">Como funciona</p>
+                <p className="text-xs text-muted-foreground">
+                  Nossa IA utiliza as características fornecidas para gerar um retrato realista. Quanto mais detalhes
+                  você fornecer, mais preciso será o resultado.
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-[#2b2438] pt-3">
+              <p className="text-xs text-muted-foreground">
+                <strong className="text-white">Dica:</strong> Preencha o máximo de campos possível, especialmente sexo,
+                idade, tom de pele, formato do rosto e características do cabelo para obter os melhores resultados.
+              </p>
+            </div>
           </div>
         </form>
       </div>

@@ -7,6 +7,8 @@ interface CrimeData {
   lat: number
   lng: number
   intensity: number
+  type?: string
+  time?: string
 }
 
 interface PoliceStation {
@@ -22,6 +24,7 @@ interface CrimeHeatmapProps {
   policeStations: PoliceStation[]
   showHeatmap: boolean
   showStations: boolean
+  lightMode?: boolean
   className?: string
 }
 
@@ -32,12 +35,14 @@ export function CrimeHeatmap({
   policeStations,
   showHeatmap,
   showStations,
+  lightMode = false,
   className = "",
 }: CrimeHeatmapProps) {
   const mapRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const heatLayerRef = useRef<any>(null)
   const stationLayerRef = useRef<any>(null)
+  const crimeMarkersRef = useRef<any>(null)
   const { leaflet: L, isLoading: isLeafletLoading, error } = useLeaflet()
   const [heatPluginLoaded, setHeatPluginLoaded] = useState(false)
   const [containerReady, setContainerReady] = useState(false)
@@ -124,7 +129,11 @@ export function CrimeHeatmap({
         attributionControl: false,
       })
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      const tileUrl = lightMode
+        ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+
+      L.tileLayer(tileUrl, {
         maxZoom: 19,
       }).addTo(map)
 
@@ -166,7 +175,25 @@ export function CrimeHeatmap({
         mapRef.current = null
       }
     }
-  }, [L, heatPluginLoaded, center, zoom, containerReady])
+  }, [L, heatPluginLoaded, center, zoom, containerReady, lightMode])
+
+  useEffect(() => {
+    if (!mapRef.current || !L) return
+
+    const tileUrl = lightMode
+      ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+
+    mapRef.current.eachLayer((layer: any) => {
+      if (layer instanceof L.TileLayer) {
+        mapRef.current.removeLayer(layer)
+      }
+    })
+
+    L.tileLayer(tileUrl, {
+      maxZoom: 19,
+    }).addTo(mapRef.current)
+  }, [lightMode, L])
 
   useEffect(() => {
     if (!mapRef.current || !L || !heatPluginLoaded) return
@@ -188,10 +215,10 @@ export function CrimeHeatmap({
           maxZoom: 17,
           max: 1.0,
           gradient: {
-            0.0: "#3b82f6",
-            0.25: "#22c55e",
-            0.5: "#eab308",
-            0.75: "#f97316",
+            0.0: "#22c55e",
+            0.2: "#84cc16",
+            0.4: "#eab308",
+            0.7: "#f97316",
             1.0: "#ef4444",
           },
         })
@@ -247,6 +274,74 @@ export function CrimeHeatmap({
     }
   }, [showStations, policeStations, L, heatPluginLoaded])
 
+  useEffect(() => {
+    if (!mapRef.current || !L || !heatPluginLoaded) return
+
+    if (crimeMarkersRef.current) {
+      mapRef.current.removeLayer(crimeMarkersRef.current)
+      crimeMarkersRef.current = null
+    }
+
+    if (crimeData.length > 0) {
+      const markersLayer = L.layerGroup()
+
+      const crimeColors: Record<string, string> = {
+        roubo: "#ef4444",
+        furto: "#f97316",
+        assalto: "#dc2626",
+        vandalismo: "#eab308",
+        drogas: "#8b5cf6",
+        violencia: "#ec4899",
+      }
+
+      crimeData.forEach((crime: CrimeData) => {
+        const color = crime.type ? crimeColors[crime.type] || "#4aa3ff" : "#4aa3ff"
+
+        const icon = L.divIcon({
+          className: "crime-marker",
+          html: `
+            <div class="relative">
+              <div class="w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform" 
+                   style="background-color: ${color}; opacity: ${crime.intensity}">
+              </div>
+            </div>
+          `,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+
+        const marker = L.marker([crime.lat, crime.lng], { icon })
+
+        const crimeTypeLabels: Record<string, string> = {
+          roubo: "Roubo",
+          furto: "Furto",
+          assalto: "Assalto",
+          vandalismo: "Vandalismo",
+          drogas: "Drogas",
+          violencia: "Violência",
+        }
+
+        marker.bindPopup(
+          `<div class="p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
+              <p class="font-semibold text-sm">${crime.type ? crimeTypeLabels[crime.type] : "Ocorrência"}</p>
+            </div>
+            ${crime.time ? `<p class="text-xs text-gray-400">Há ${crime.time}</p>` : ""}
+            <p class="text-xs text-gray-400 mt-1">Intensidade: ${Math.round(crime.intensity * 100)}%</p>
+          </div>`,
+          {
+            className: "custom-popup",
+          },
+        )
+        marker.addTo(markersLayer)
+      })
+
+      markersLayer.addTo(mapRef.current)
+      crimeMarkersRef.current = markersLayer
+    }
+  }, [crimeData, L, heatPluginLoaded])
+
   if (error) {
     return (
       <div className="w-full h-full bg-[#1a1625] flex items-center justify-center">
@@ -263,41 +358,44 @@ export function CrimeHeatmap({
       <div className="relative w-full h-full min-h-[400px]">
         <div ref={containerRef} className={`w-full h-full min-h-[400px] ${className}`} />
         {(isLeafletLoading || !heatPluginLoaded || !containerReady) && (
-          <div className="absolute inset-0 bg-[#1a1625] flex items-center justify-center">
+          <div
+            className={`absolute inset-0 flex items-center justify-center ${lightMode ? "bg-gray-100" : "bg-[#1a1625]"}`}
+          >
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-[#4aa3ff] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">Carregando mapa...</p>
+              <p className={`text-xs ${lightMode ? "text-gray-700" : "text-muted-foreground"}`}>Carregando mapa...</p>
             </div>
           </div>
         )}
       </div>
       <style jsx global>{`
         .leaflet-container {
-          background: #1a1625;
+          background: ${lightMode ? "#f3f4f6" : "#1a1625"};
         }
         .user-location-marker,
-        .police-station-marker {
+        .police-station-marker,
+        .crime-marker {
           background: transparent;
           border: none;
         }
         .custom-popup .leaflet-popup-content-wrapper {
-          background: #1a1625;
-          color: white;
-          border: 1px solid #4aa3ff;
+          background: ${lightMode ? "#ffffff" : "#1a1625"};
+          color: ${lightMode ? "#111827" : "#ffffff"};
+          border: 1px solid ${lightMode ? "#d1d5db" : "#4aa3ff"};
           border-radius: 8px;
         }
         .custom-popup .leaflet-popup-tip {
-          background: #1a1625;
-          border: 1px solid #4aa3ff;
+          background: ${lightMode ? "#ffffff" : "#1a1625"};
+          border: 1px solid ${lightMode ? "#d1d5db" : "#4aa3ff"};
         }
         .leaflet-control-zoom {
           border: none !important;
           box-shadow: none !important;
         }
         .leaflet-control-zoom a {
-          background: #1a1625 !important;
-          border: 1px solid #2b2438 !important;
-          color: white !important;
+          background: ${lightMode ? "#ffffff" : "#1a1625"} !important;
+          border: 1px solid ${lightMode ? "#d1d5db" : "#2b2438"} !important;
+          color: ${lightMode ? "#111827" : "#ffffff"} !important;
           width: 40px !important;
           height: 40px !important;
           line-height: 40px !important;
