@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, MapPin, Calendar, Upload } from "lucide-react"
+import { ArrowLeft, MapPin, Calendar, Upload, User, Phone, Mail, CreditCard } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
@@ -135,6 +135,83 @@ export default function BoletimPage() {
             <span className="text-white">Nome Dados (Opcional)</span>
             <Switch checked={!anonymous} onCheckedChange={(checked) => setAnonymous(!checked)} />
           </div>
+
+          {!anonymous && (
+            <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="bg-[#1a1625] rounded-2xl p-4 border border-[#2b2438] space-y-4">
+                <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Dados Pessoais
+                </h3>
+
+                {/* Full Name */}
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Nome Completo</label>
+                  <Input
+                    type="text"
+                    placeholder="Digite seu nome completo"
+                    className="bg-[#0f0b1a] border-[#2b2438] text-white"
+                    required={!anonymous}
+                  />
+                </div>
+
+                {/* CPF */}
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    CPF
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    className="bg-[#0f0b1a] border-[#2b2438] text-white"
+                    required={!anonymous}
+                  />
+                </div>
+
+                {/* RG */}
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">RG</label>
+                  <Input
+                    type="text"
+                    placeholder="00.000.000-0"
+                    maxLength={12}
+                    className="bg-[#0f0b1a] border-[#2b2438] text-white"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Telefone
+                  </label>
+                  <Input
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                    className="bg-[#0f0b1a] border-[#2b2438] text-white"
+                    required={!anonymous}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="seu@email.com"
+                    className="bg-[#0f0b1a] border-[#2b2438] text-white"
+                    required={!anonymous}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Submit Button */}
           <Button type="submit" className="w-full gradient-primary text-white btn-touch text-lg font-semibold">

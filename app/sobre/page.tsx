@@ -1,8 +1,11 @@
 import { ArrowLeft, Shield, Brain, MapPin, Phone } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/hooks/use-translation"
 
 export default function SobrePage() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen bg-[#0f0b1a] p-6">
       <div className="max-w-2xl mx-auto">
@@ -71,6 +74,14 @@ export default function SobrePage() {
               Seus dados são protegidos com criptografia de ponta a ponta. Oferecemos a opção de denúncias anônimas para
               garantir sua segurança e privacidade.
             </p>
+          </div>
+
+          <div className="mt-6 bg-[#1a1625] rounded-3xl p-6 border border-[#2b2438] text-center">
+            <h3 className="text-white font-semibold mb-2">{t("needHelp")}</h3>
+            <p className="text-muted-foreground text-sm mb-4">{t("contactTeam")}</p>
+            <Link href="/suporte">
+              <Button className="gradient-primary text-white">{t("talkToSupport")}</Button>
+            </Link>
           </div>
         </div>
       </div>

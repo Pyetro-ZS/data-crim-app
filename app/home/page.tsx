@@ -1,29 +1,34 @@
+"use client"
+
 import Link from "next/link"
 import { Phone, FileText, User, MapPin } from "lucide-react"
 import { DataCrimLogo } from "@/components/datacrim-logo"
+import { useTranslation } from "@/hooks/use-translation"
 
 export default function HomePage() {
+  const { t } = useTranslation()
+
   const menuItems = [
     {
-      title: "Ligação Polícia Civil",
+      title: t("policiaCall"),
       icon: Phone,
       href: "/policia-civil",
       description: "Contato direto com autoridades",
     },
     {
-      title: "Boletim de Ocorrência",
+      title: t("boletim"),
       icon: FileText,
       href: "/boletim",
       description: "Registre uma ocorrência",
     },
     {
-      title: "Retrato Falado (IA)",
+      title: t("retratoFalado"),
       icon: User,
       href: "/retrato-falado",
       description: "Gere retrato com IA",
     },
     {
-      title: "Mapeamento do Local",
+      title: t("mapeamento"),
       icon: MapPin,
       href: "/mapeamento",
       description: "Visualize crimes na região",
