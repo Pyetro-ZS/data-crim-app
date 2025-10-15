@@ -1,3 +1,5 @@
+"use client"
+
 import { useSettings } from "@/contexts/settings-context"
 import { translations, type TranslationKey } from "@/lib/translations"
 
