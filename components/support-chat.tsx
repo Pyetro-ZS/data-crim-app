@@ -149,7 +149,7 @@ export function SupportChat({ onClose }: SupportChatProps) {
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               placeholder={t("typeMessage")}
               disabled={isLoading}
-              className={theme === "light" ? "bg-white border-gray-300 text-gray-900" : "text-white"}
+              className={theme === "light" ? "bg-white border-gray-300" : ""}
             />
             <Button onClick={handleSendMessage} disabled={isLoading || !inputMessage.trim()} size="icon">
               <Send className="w-5 h-5" />

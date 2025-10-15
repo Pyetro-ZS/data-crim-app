@@ -2,7 +2,6 @@ import { ArrowLeft, HelpCircle, Phone, FileText, User, MapPin } from "lucide-rea
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/hooks/use-translation"
-import dynamic from 'next/dynamic';
 
 export default function AjudaPage() {
   const { t } = useTranslation()
@@ -88,20 +87,7 @@ export default function AjudaPage() {
             <Button className="gradient-primary text-white">{t("talkToSupport")}</Button>
           </Link>
         </div>
-
       </div>
     </div>
   )
 }
-
-const AjudaPage = dynamic(
-  // Importa a função AjudaPageContent que contém o hook useTranslation
-  () => Promise.resolve(AjudaPageContent),
-  {
-    ssr: false, // ESSENCIAL: Impede a renderização no servidor
-    loading: () => <div className="p-6 text-white text-center">Carregando Central de Ajuda...</div>,
-  }
-);
-
-// O componente final exportado por padrão
-export default AjudaPage;
