@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { useTranslation } from "@/hooks/use-translation"
 import { useState } from "react"
 import { useTheme } from "@/contexts/theme-context"
-import { SupportChat } from "@/components/support-chat"
 
 export default function SuportePage() {
   const { t } = useTranslation()
@@ -23,40 +22,15 @@ export default function SuportePage() {
     message: "",
   })
   const [submitted, setSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showChat, setShowChat] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const response = await fetch("/api/support/ticket", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        console.log("[v0] Support ticket created:", data.ticket)
-        setSubmitted(true)
-        setTimeout(() => {
-          setSubmitted(false)
-          setFormData({ name: "", email: "", subject: "", message: "" })
-        }, 5000)
-      } else {
-        setError(data.error || "Failed to submit ticket")
-      }
-    } catch (err) {
-      console.error("[v0] Error submitting support ticket:", err)
-      setError("Failed to submit ticket. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
+    console.log("[v0] Support form submitted:", formData)
+    setSubmitted(true)
+    setTimeout(() => {
+      setSubmitted(false)
+      setFormData({ name: "", email: "", subject: "", message: "" })
+    }, 3000)
   }
 
   const bgColor = theme === "light" ? "bg-white" : "bg-[#0f0b1a]"
@@ -94,9 +68,7 @@ export default function SuportePage() {
               <div className="flex-1">
                 <h3 className={`${textColor} font-semibold mb-1`}>{t("liveChat")}</h3>
                 <p className={`${mutedColor} text-sm mb-3`}>{t("liveChatDesc")}</p>
-                <Button onClick={() => setShowChat(true)} className="gradient-primary text-white">
-                  {t("startChat")}
-                </Button>
+                <Button className="gradient-primary text-white">{t("startChat")}</Button>
               </div>
             </div>
           </div>
@@ -146,12 +118,6 @@ export default function SuportePage() {
           </div>
           <p className={`${mutedColor} text-sm mb-6`}>{t("contactFormDesc")}</p>
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           {submitted ? (
             <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4 text-center">
               <p className="text-green-400 font-medium">{t("messageSent")}</p>
@@ -167,7 +133,6 @@ export default function SuportePage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  disabled={isSubmitting}
                   className={theme === "light" ? "bg-white border-gray-300" : ""}
                 />
               </div>
@@ -182,7 +147,6 @@ export default function SuportePage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  disabled={isSubmitting}
                   className={theme === "light" ? "bg-white border-gray-300" : ""}
                 />
               </div>
@@ -196,7 +160,6 @@ export default function SuportePage() {
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   required
-                  disabled={isSubmitting}
                   className={theme === "light" ? "bg-white border-gray-300" : ""}
                 />
               </div>
@@ -210,14 +173,13 @@ export default function SuportePage() {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   required
-                  disabled={isSubmitting}
                   rows={5}
                   className={theme === "light" ? "bg-white border-gray-300" : ""}
                 />
               </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full gradient-primary text-white">
-                {isSubmitting ? t("sending") : t("sendMessage")}
+              <Button type="submit" className="w-full gradient-primary text-white">
+                {t("sendMessage")}
               </Button>
             </form>
           )}
@@ -232,8 +194,6 @@ export default function SuportePage() {
           <p className={`${mutedColor} text-sm`}>{t("supportHoursDesc")}</p>
         </div>
       </div>
-
-      {showChat && <SupportChat onClose={() => setShowChat(false)} />}
     </div>
   )
 }

@@ -130,12 +130,6 @@ export const translations = {
     messageSent: "Mensagem enviada com sucesso!",
     supportHours: "Horário de Atendimento",
     supportHoursDesc: "Segunda a Sexta: 8h às 18h",
-    // Chat-specific translations
-    chatWelcome: "Olá! Como posso ajudá-lo hoje?",
-    chatSubtitle: "Resposta em tempo real",
-    typeMessage: "Digite sua mensagem...",
-    chatError: "Desculpe, ocorreu um erro. Por favor, tente novamente.",
-    sending: "Enviando...",
   },
   en: {
     // Common
@@ -266,12 +260,6 @@ export const translations = {
     messageSent: "Message sent successfully!",
     supportHours: "Support Hours",
     supportHoursDesc: "Monday to Friday: 8am to 6pm",
-    // Chat-specific translations
-    chatWelcome: "Hello! How can I help you today?",
-    chatSubtitle: "Real-time response",
-    typeMessage: "Type your message...",
-    chatError: "Sorry, an error occurred. Please try again.",
-    sending: "Sending...",
   },
   es: {
     // Common
@@ -402,12 +390,6 @@ export const translations = {
     messageSent: "¡Mensaje enviado con éxito!",
     supportHours: "Horario de Atención",
     supportHoursDesc: "Lunes a Viernes: 8h a 18h",
-    // Chat-specific translations
-    chatWelcome: "¡Hola! ¿Cómo puedo ayudarte hoy?",
-    chatSubtitle: "Respuesta en tiempo real",
-    typeMessage: "Escribe tu mensaje...",
-    chatError: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
-    sending: "Enviando...",
   },
 } as const
 
