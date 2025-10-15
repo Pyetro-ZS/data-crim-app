@@ -1,11 +1,8 @@
 import { ArrowLeft, HelpCircle, Phone, FileText, User, MapPin } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useTranslation } from "@/hooks/use-translation"
 
 export default function AjudaPage() {
-  const { t } = useTranslation()
-
   const faqs = [
     {
       question: "Como registrar um boletim de ocorrência?",
@@ -81,11 +78,9 @@ export default function AjudaPage() {
 
         {/* Contact Support */}
         <div className="mt-8 bg-[#1a1625] rounded-3xl p-6 border border-[#2b2438] text-center">
-          <h3 className="text-white font-semibold mb-2">{t("needHelp")}</h3>
-          <p className="text-muted-foreground text-sm mb-4">{t("contactTeam")}</p>
-          <Link href="/suporte">
-            <Button className="gradient-primary text-white">{t("talkToSupport")}</Button>
-          </Link>
+          <h3 className="text-white font-semibold mb-2">Ainda precisa de ajuda?</h3>
+          <p className="text-muted-foreground text-sm mb-4">Entre em contato com nossa equipe de suporte</p>
+          <Button className="gradient-primary text-white">Falar com Suporte</Button>
         </div>
       </div>
     </div>
