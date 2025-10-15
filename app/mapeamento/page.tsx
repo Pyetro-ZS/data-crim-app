@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Maximize2, Filter, TrendingUp } from "lucide-react"
+import { ArrowLeft, Maximize2, Filter, TrendingUp, Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { useTheme } from "@/contexts/theme-context"
 
 const CrimeHeatmap = dynamic(
   () => import("@/components/crime-heatmap").then((mod) => ({ default: mod.CrimeHeatmap })),
@@ -38,8 +37,7 @@ export default function MapeamentoPage() {
   const [selectedCrimeTypes, setSelectedCrimeTypes] = useState<string[]>(Object.keys(CRIME_TYPES))
   const [timePeriod, setTimePeriod] = useState<"24h" | "7d" | "30d">("7d")
   const [showStats, setShowStats] = useState(true)
-  const { theme } = useTheme()
-  const lightMode = theme === "light"
+  const [lightMode, setLightMode] = useState(false)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -128,6 +126,16 @@ export default function MapeamentoPage() {
           </Link>
           <h1 className={`text-lg font-bold ${lightMode ? "text-gray-900" : "text-white"}`}>Mapeamento do Local</h1>
         </div>
+        {/* Light/Dark Mode Toggle Button */}
+        <button
+          onClick={() => setLightMode(!lightMode)}
+          className={`p-2 rounded-lg transition-colors ${
+            lightMode ? "bg-gray-100 text-gray-900 hover:bg-gray-200" : "bg-[#1a1625] text-white hover:bg-[#2b2438]"
+          }`}
+          aria-label="Toggle theme"
+        >
+          {lightMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Controls */}

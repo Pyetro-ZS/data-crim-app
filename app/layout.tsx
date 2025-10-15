@@ -5,7 +5,6 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import "./globals.css"
-import { ThemeProvider } from "@/contexts/theme-context"
 
 export const metadata: Metadata = {
   title: "DataCrim - Segurança e Denúncia Inteligente",
@@ -21,9 +20,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <ThemeProvider>
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-        </ThemeProvider>
+        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         <Analytics />
       </body>
     </html>
