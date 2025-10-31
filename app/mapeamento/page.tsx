@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Maximize2, Filter, TrendingUp, Sun, Moon } from "lucide-react"
+import { ArrowLeft, Maximize2, Filter, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { useTheme } from "@/contexts/theme-context"
+import { useTranslation } from "@/hooks/use-translation"
 
 const CrimeHeatmap = dynamic(
   () => import("@/components/crime-heatmap").then((mod) => ({ default: mod.CrimeHeatmap })),
@@ -22,24 +24,26 @@ const CrimeHeatmap = dynamic(
   },
 )
 
-const CRIME_TYPES = {
-  roubo: { label: "Roubo", color: "#ef4444", icon: "💰" },
-  furto: { label: "Furto", color: "#f97316", icon: "🎒" },
-  assalto: { label: "Assalto", color: "#dc2626", icon: "🔫" },
-  vandalismo: { label: "Vandalismo", color: "#eab308", icon: "🔨" },
-  drogas: { label: "Drogas", color: "#8b5cf6", icon: "💊" },
-  violencia: { label: "Violência", color: "#ec4899", icon: "⚠️" },
-}
-
 export default function MapeamentoPage() {
   const [showHeatmap, setShowHeatmap] = useState(true)
   const [showStations, setShowStations] = useState(false)
-  const [selectedCrimeTypes, setSelectedCrimeTypes] = useState<string[]>(Object.keys(CRIME_TYPES))
+  const [selectedCrimeTypes, setSelectedCrimeTypes] = useState<string[]>([])
   const [timePeriod, setTimePeriod] = useState<"24h" | "7d" | "30d">("7d")
   const [showStats, setShowStats] = useState(true)
-  const [lightMode, setLightMode] = useState(false)
+  const { theme } = useTheme()
+  const lightMode = theme === "light"
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const { t } = useTranslation()
+
+  const CRIME_TYPES = {
+    roubo: { label: t("robbery"), color: "#ef4444", icon: "💰" },
+    furto: { label: t("theft"), color: "#f97316", icon: "🎒" },
+    assalto: { label: t("assault"), color: "#dc2626", icon: "🔫" },
+    vandalismo: { label: t("vandalism"), color: "#eab308", icon: "🔨" },
+    drogas: { label: t("drugs"), color: "#8b5cf6", icon: "💊" },
+    violencia: { label: t("violence"), color: "#ec4899", icon: "⚠️" },
+  }
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -55,7 +59,8 @@ export default function MapeamentoPage() {
     } else {
       setUserLocation([-23.5505, -46.6333])
     }
-  }, [])
+    setSelectedCrimeTypes(Object.keys(CRIME_TYPES))
+  }, [t])
 
   const allCrimeData = userLocation
     ? [
@@ -124,18 +129,8 @@ export default function MapeamentoPage() {
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
-          <h1 className={`text-lg font-bold ${lightMode ? "text-gray-900" : "text-white"}`}>Mapeamento do Local</h1>
+          <h1 className={`text-lg font-bold ${lightMode ? "text-gray-900" : "text-white"}`}>{t("mapeamentoTitle")}</h1>
         </div>
-        {/* Light/Dark Mode Toggle Button */}
-        <button
-          onClick={() => setLightMode(!lightMode)}
-          className={`p-2 rounded-lg transition-colors ${
-            lightMode ? "bg-gray-100 text-gray-900 hover:bg-gray-200" : "bg-[#1a1625] text-white hover:bg-[#2b2438]"
-          }`}
-          aria-label="Toggle theme"
-        >
-          {lightMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-        </button>
       </div>
 
       {/* Controls */}
@@ -148,11 +143,11 @@ export default function MapeamentoPage() {
             <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} />
           </div>
           <div className="flex items-center justify-between">
-            <span className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>Delegacias</span>
+            <span className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>{t("policeStations")}</span>
             <Switch checked={showStations} onCheckedChange={setShowStations} />
           </div>
           <div className="flex items-center justify-between">
-            <span className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>Estatísticas</span>
+            <span className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>{t("statistics")}</span>
             <Switch checked={showStats} onCheckedChange={setShowStats} />
           </div>
         </div>
@@ -162,13 +157,13 @@ export default function MapeamentoPage() {
             className={`text-sm font-medium flex items-center gap-2 ${lightMode ? "text-gray-900" : "text-white"}`}
           >
             <Filter className="w-4 h-4" />
-            Período
+            {t("timePeriod")}
           </label>
           <div className="flex gap-2">
             {[
-              { value: "24h", label: "24h" },
-              { value: "7d", label: "7 dias" },
-              { value: "30d", label: "30 dias" },
+              { value: "24h", label: t("last24h") },
+              { value: "7d", label: t("last7days") },
+              { value: "30d", label: t("last30days") },
             ].map((period) => (
               <button
                 key={period.value}
@@ -188,7 +183,9 @@ export default function MapeamentoPage() {
         </div>
 
         <div className="space-y-2">
-          <label className={`text-sm font-medium ${lightMode ? "text-gray-900" : "text-white"}`}>Tipos de Crime</label>
+          <label className={`text-sm font-medium ${lightMode ? "text-gray-900" : "text-white"}`}>
+            {t("crimeTypes")}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(CRIME_TYPES).map(([type, info]) => (
               <button
@@ -243,7 +240,7 @@ export default function MapeamentoPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-[#4aa3ff]" />
                   <h3 className={`font-semibold text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>
-                    Estatísticas
+                    {t("statistics")}
                   </h3>
                 </div>
                 <div className="space-y-2">
@@ -251,7 +248,7 @@ export default function MapeamentoPage() {
                     className={`flex justify-between items-center pb-2 border-b ${lightMode ? "border-gray-200" : "border-[#2b2438]"}`}
                   >
                     <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>
-                      Total de Ocorrências
+                      {t("total")}
                     </span>
                     <span className={`text-lg font-bold ${lightMode ? "text-gray-900" : "text-white"}`}>
                       {totalCrimes}
@@ -290,7 +287,7 @@ export default function MapeamentoPage() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-[#4aa3ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>Obtendo localização...</p>
+              <p className={`text-sm ${lightMode ? "text-gray-900" : "text-white"}`}>{t("loading")}</p>
             </div>
           </div>
         )}
@@ -299,7 +296,7 @@ export default function MapeamentoPage() {
       <div className={`p-4 border-t space-y-3 ${lightMode ? "border-gray-200 bg-white" : "border-[#2b2438]"}`}>
         <div>
           <p className={`text-xs font-medium mb-2 ${lightMode ? "text-gray-700" : "text-muted-foreground"}`}>
-            Intensidade de Criminalidade
+            {t("intensity")}
           </p>
           <div
             className="h-3 rounded-full"
@@ -308,15 +305,15 @@ export default function MapeamentoPage() {
             }}
           />
           <div className="flex justify-between mt-1">
-            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>Baixo</span>
-            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>Médio</span>
-            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>Alto</span>
+            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>{t("low")}</span>
+            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>{t("medium")}</span>
+            <span className={`text-xs ${lightMode ? "text-gray-600" : "text-muted-foreground"}`}>{t("high")}</span>
           </div>
         </div>
 
         <div>
           <p className={`text-xs font-medium mb-2 ${lightMode ? "text-gray-700" : "text-muted-foreground"}`}>
-            Tipos de Crime
+            {t("crimeTypes")}
           </p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(CRIME_TYPES).map(([type, info]) => (
