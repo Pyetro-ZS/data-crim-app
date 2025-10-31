@@ -111,7 +111,7 @@ export default function BoletimPage() {
 
           {/* Description */}
           <div>
-            <label className="text-sm text-white mb-2 block">Descrição Detalalde da Occrrência</label>
+            <label className="text-sm text-white mb-2 block">Descrição Detalhada da Ocorrência</label>
             <Textarea
               placeholder="Descreva o que aconteceu com o máximo de detalhes possível..."
               className="bg-[#1a1625] border-[#2b2438] text-white min-h-32"

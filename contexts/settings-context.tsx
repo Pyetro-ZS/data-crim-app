@@ -49,26 +49,28 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const isInitialLoad = useRef(true)
 
-  // Load settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem("datacrim-settings")
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings)
-        setSettings({ ...defaultSettings, ...parsed })
-      } catch (error) {
-        console.error("[v0] Failed to parse settings:", error)
+    setMounted(true)
+
+    if (typeof window !== "undefined") {
+      const savedSettings = localStorage.getItem("datacrim-settings")
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings)
+          setSettings({ ...defaultSettings, ...parsed })
+        } catch (error) {
+          console.error("[v0] Failed to parse settings:", error)
+        }
       }
     }
-    setMounted(true)
+
     setTimeout(() => {
       isInitialLoad.current = false
     }, 100)
   }, [])
 
-  // Save settings to localStorage whenever they change
   useEffect(() => {
-    if (mounted && !isInitialLoad.current) {
+    if (mounted && !isInitialLoad.current && typeof window !== "undefined") {
       const currentSaved = localStorage.getItem("datacrim-settings")
       const newSettings = JSON.stringify(settings)
 
@@ -99,11 +101,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const resetSettings = () => {
     setSettings(defaultSettings)
-    localStorage.removeItem("datacrim-settings")
-  }
-
-  if (!mounted) {
-    return <>{children}</>
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("datacrim-settings")
+    }
   }
 
   return (
