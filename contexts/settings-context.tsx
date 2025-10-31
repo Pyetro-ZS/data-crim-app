@@ -46,12 +46,9 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
-  const [mounted, setMounted] = useState(false)
   const isInitialLoad = useRef(true)
 
   useEffect(() => {
-    setMounted(true)
-
     if (typeof window !== "undefined") {
       const savedSettings = localStorage.getItem("datacrim-settings")
       if (savedSettings) {
@@ -59,27 +56,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(savedSettings)
           setSettings({ ...defaultSettings, ...parsed })
         } catch (error) {
-          console.error("[v0] Failed to parse settings:", error)
+          console.error("Failed to parse settings:", error)
         }
       }
     }
 
+    // Mark initial load as complete after a short delay
     setTimeout(() => {
       isInitialLoad.current = false
     }, 100)
   }, [])
 
   useEffect(() => {
-    if (mounted && !isInitialLoad.current && typeof window !== "undefined") {
+    if (!isInitialLoad.current && typeof window !== "undefined") {
       const currentSaved = localStorage.getItem("datacrim-settings")
       const newSettings = JSON.stringify(settings)
 
       if (currentSaved !== newSettings) {
         localStorage.setItem("datacrim-settings", newSettings)
-        console.log("[v0] Settings saved:", settings)
       }
     }
-  }, [settings, mounted])
+  }, [settings])
 
   const updateNotifications = (notifications: Partial<NotificationSettings>) => {
     setSettings((prev) => ({
