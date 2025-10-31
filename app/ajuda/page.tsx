@@ -1,3 +1,5 @@
+"use client"
+
 import { ArrowLeft, HelpCircle, Phone, FileText, User, MapPin } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
 
 export type Language = "pt-BR" | "en" | "es"
 
@@ -47,6 +47,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [mounted, setMounted] = useState(false)
+  const isInitialLoad = useRef(true)
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -60,13 +61,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
     }
     setMounted(true)
+    setTimeout(() => {
+      isInitialLoad.current = false
+    }, 100)
   }, [])
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    if (mounted) {
-      localStorage.setItem("datacrim-settings", JSON.stringify(settings))
-      console.log("[v0] Settings saved:", settings)
+    if (mounted && !isInitialLoad.current) {
+      const currentSaved = localStorage.getItem("datacrim-settings")
+      const newSettings = JSON.stringify(settings)
+
+      if (currentSaved !== newSettings) {
+        localStorage.setItem("datacrim-settings", newSettings)
+        console.log("[v0] Settings saved:", settings)
+      }
     }
   }, [settings, mounted])
 
