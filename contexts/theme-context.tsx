@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
 
 type Theme = "light" | "dark"
 
@@ -15,22 +15,29 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark")
   const [mounted, setMounted] = useState(false)
+  const lastSavedThemeRef = useRef<Theme>("dark")
 
   useEffect(() => {
     setMounted(true)
 
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("datacrim-theme") as Theme | null
-      if (savedTheme) {
+      if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
         setThemeState(savedTheme)
+        lastSavedThemeRef.current = savedTheme
+        console.log("[v0] Theme loaded:", savedTheme)
       }
     }
   }, [])
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("datacrim-theme", newTheme)
+    if (newTheme !== theme) {
+      setThemeState(newTheme)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("datacrim-theme", newTheme)
+        lastSavedThemeRef.current = newTheme
+        console.log("[v0] Theme saved:", newTheme)
+      }
     }
   }
 

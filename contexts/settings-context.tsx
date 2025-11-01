@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, useCallback, type ReactNode } from "react"
 
 export type Language = "pt-BR" | "en" | "es"
 
@@ -44,9 +44,16 @@ const defaultSettings: Settings = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
+function settingsToKey(settings: Settings): string {
+  return JSON.stringify(settings)
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const isInitialLoad = useRef(true)
+  const lastSavedKey = useRef<string>(settingsToKey(defaultSettings))
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const updatePendingRef = useRef(false)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -54,54 +61,117 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings)
-          setSettings({ ...defaultSettings, ...parsed })
+          const merged = { ...defaultSettings, ...parsed }
+          lastSavedKey.current = settingsToKey(merged)
+          setSettings(merged)
+          console.log("[v0] Settings loaded from localStorage")
         } catch (error) {
-          console.error("Failed to parse settings:", error)
+          console.error("[v0] Failed to parse settings:", error)
+          lastSavedKey.current = settingsToKey(defaultSettings)
         }
       }
     }
 
-    // Mark initial load as complete after a short delay
-    setTimeout(() => {
+    // Mark initial load complete after a brief delay
+    const timer = setTimeout(() => {
       isInitialLoad.current = false
-    }, 100)
+    }, 50)
+
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    if (!isInitialLoad.current && typeof window !== "undefined") {
-      const currentSaved = localStorage.getItem("datacrim-settings")
-      const newSettings = JSON.stringify(settings)
+    if (isInitialLoad.current || typeof window === "undefined") {
+      return
+    }
 
-      if (currentSaved !== newSettings) {
-        localStorage.setItem("datacrim-settings", newSettings)
+    const settingsKey = settingsToKey(settings)
+
+    // Only schedule save if settings have actually changed
+    if (settingsKey === lastSavedKey.current) {
+      console.log("[v0] Settings unchanged, skipping save")
+      return
+    }
+
+    // Prevent multiple rapid updates
+    if (updatePendingRef.current) {
+      console.log("[v0] Save already pending, skipping")
+      return
+    }
+
+    updatePendingRef.current = true
+
+    // Clear existing save timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+    }
+
+    // Schedule save after 300ms of inactivity
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem("datacrim-settings", JSON.stringify(settings))
+        lastSavedKey.current = settingsKey
+        updatePendingRef.current = false
+        console.log("[v0] Settings saved to localStorage")
+      } catch (error) {
+        console.error("[v0] Failed to save settings:", error)
+        updatePendingRef.current = false
+      }
+    }, 300)
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
       }
     }
   }, [settings])
 
-  const updateNotifications = (notifications: Partial<NotificationSettings>) => {
-    setSettings((prev) => ({
-      ...prev,
-      notifications: { ...prev.notifications, ...notifications },
-    }))
-  }
+  const updateNotifications = useCallback((notifications: Partial<NotificationSettings>) => {
+    setSettings((prev) => {
+      const updated = {
+        ...prev,
+        notifications: { ...prev.notifications, ...notifications },
+      }
+      // Only update if actually changed
+      if (settingsToKey(updated) === settingsToKey(prev)) {
+        return prev
+      }
+      return updated
+    })
+  }, [])
 
-  const updatePrivacy = (privacy: Partial<PrivacySettings>) => {
-    setSettings((prev) => ({
-      ...prev,
-      privacy: { ...prev.privacy, ...privacy },
-    }))
-  }
+  const updatePrivacy = useCallback((privacy: Partial<PrivacySettings>) => {
+    setSettings((prev) => {
+      const updated = {
+        ...prev,
+        privacy: { ...prev.privacy, ...privacy },
+      }
+      // Only update if actually changed
+      if (settingsToKey(updated) === settingsToKey(prev)) {
+        return prev
+      }
+      return updated
+    })
+  }, [])
 
-  const setLanguage = (language: Language) => {
-    setSettings((prev) => ({ ...prev, language }))
-  }
+  const setLanguage = useCallback((language: Language) => {
+    setSettings((prev) => {
+      if (prev.language === language) {
+        return prev
+      }
+      return { ...prev, language }
+    })
+  }, [])
 
-  const resetSettings = () => {
+  const resetSettings = useCallback(() => {
     setSettings(defaultSettings)
+    lastSavedKey.current = settingsToKey(defaultSettings)
+    updatePendingRef.current = false
     if (typeof window !== "undefined") {
       localStorage.removeItem("datacrim-settings")
+      console.log("[v0] Settings reset to defaults")
     }
-  }
+  }, [])
 
   return (
     <SettingsContext.Provider

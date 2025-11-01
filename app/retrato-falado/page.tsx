@@ -119,23 +119,34 @@ export default function RetratoFaladoPage() {
       })
 
       clearInterval(progressInterval)
-      setGenerationProgress(100)
+
+      console.log("[v0] API Response status:", response.status)
+      console.log("[v0] API Response ok:", response.ok)
 
       if (!response.ok) {
-        throw new Error("Falha ao gerar retrato")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[v0] API Error response:", errorData)
+        throw new Error(errorData.error || `Erro ao gerar retrato (Status: ${response.status})`)
       }
 
       const data = await response.json()
+      console.log("[v0] Response data received:", { success: data.success, hasImageUrl: !!data.imageUrl })
 
-      if (data.success) {
+      setGenerationProgress(100)
+
+      if (data.success && data.imageUrl) {
         setGeneratedImage(data.imageUrl)
         setSuccessMessage("Retrato gerado com sucesso!")
       } else {
-        throw new Error(data.error || "Erro ao gerar retrato")
+        throw new Error(data.error || "Resposta inválida do servidor")
       }
-    } catch (err) {
-      console.error("[v0] Error generating portrait:", err)
-      setError("Não foi possível gerar o retrato. Por favor, verifique os dados e tente novamente.")
+    } catch (err: any) {
+      console.error("[v0] Error generating portrait:", err.message)
+      console.error("[v0] Full error:", err)
+      setError(
+        err.message ||
+          "Não foi possível gerar o retrato. Verifique se a chave da API está configurada e tente novamente.",
+      )
       setGenerationProgress(0)
     } finally {
       setGenerating(false)

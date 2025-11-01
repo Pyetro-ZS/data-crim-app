@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/contexts/theme-context"
 import { useTranslation } from "@/hooks/use-translation"
+import { useGeolocation } from "@/hooks/use-geolocation"
 
 const CrimeHeatmap = dynamic(
   () => import("@/components/crime-heatmap").then((mod) => ({ default: mod.CrimeHeatmap })),
@@ -32,9 +33,10 @@ export default function MapeamentoPage() {
   const [showStats, setShowStats] = useState(true)
   const { theme } = useTheme()
   const lightMode = theme === "light"
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const { t } = useTranslation()
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const { location: userLocation } = useGeolocation()
 
   const CRIME_TYPES = {
     roubo: { label: t("robbery"), color: "#ef4444", icon: "💰" },
@@ -46,21 +48,8 @@ export default function MapeamentoPage() {
   }
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude])
-        },
-        (error) => {
-          console.log("[v0] Geolocation error:", error)
-          setUserLocation([-23.5505, -46.6333])
-        },
-      )
-    } else {
-      setUserLocation([-23.5505, -46.6333])
-    }
     setSelectedCrimeTypes(Object.keys(CRIME_TYPES))
-  }, [t])
+  }, [])
 
   const allCrimeData = userLocation
     ? [

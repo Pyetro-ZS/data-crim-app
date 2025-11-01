@@ -7,6 +7,7 @@ import { Suspense } from "react"
 import "./globals.css"
 import { ThemeProvider } from "@/contexts/theme-context"
 import { SettingsProvider } from "@/contexts/settings-context"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export const metadata: Metadata = {
   title: "DataCrim - Segurança e Denúncia Inteligente",
@@ -22,11 +23,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <ThemeProvider>
-          <SettingsProvider>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </SettingsProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <SettingsProvider>
+              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            </SettingsProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
         <Analytics />
       </body>
     </html>
