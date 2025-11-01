@@ -12,9 +12,6 @@ import { ErrorBoundary } from "@/components/error-boundary"
 export const metadata: Metadata = {
   title: "DataCrim - Segurança e Denúncia Inteligente",
   description: "Plataforma de denúncia de crimes e segurança pública com IA",
-  icon: {
-    icon: "/icon-logo.png",
-  },
 }
 
 export default function RootLayout({
@@ -24,7 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      
+      <link rel="icon" href="/icon-logo.png" type="image/png" />
+      <link rel="apple-touch-icon" href="/icon-logo.png" />
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <ErrorBoundary>
           <ThemeProvider>
