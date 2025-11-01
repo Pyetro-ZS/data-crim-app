@@ -21,8 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <link rel="icon" href="/icon-logo.png" type="image/png" className="favicon"/>
-      <link rel="apple-touch-icon" href="/icon-logo.png" className="favicon"/>
+      <link rel="icon" href="/icon-logo.png" type="image/png"/>
+      <link rel="apple-touch-icon" href="/icon-logo.png"/>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <ErrorBoundary>
           <ThemeProvider>
