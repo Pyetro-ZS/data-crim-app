@@ -120,17 +120,6 @@
   }
 }
 
-link[rel="icon"] {
-  filter: drop-shadow(0 0 2px #0003);
-  transition: filter 0.3s ease;
-}
-
-@media (prefers-color-scheme: dark) {
-  link[rel="icon"] {
-    filter: brightness(0.8);
-  }
-}
-
 /* Custom gradient utilities */
 .gradient-primary {
   background: linear-gradient(135deg, #4aa3ff 0%, #2b6ef6 100%);
@@ -143,10 +132,4 @@ link[rel="icon"] {
 .btn-touch {
   min-height: 56px;
   min-width: 44px;
-}
-
-.favicon {
-  border-radius: 50%; 
-  object-fit: cover;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
