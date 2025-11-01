@@ -3,13 +3,14 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, MapPin, Calendar, Upload, User, Phone, Mail, CreditCard } from "lucide-react"
+import { ArrowLeft, MapPin, Calendar, Upload, User, Phone, Mail, CreditCard, X } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { useAddressSearch } from "@/hooks/use-address-search"
 
 const LocationPicker = dynamic(
   () => import("@/components/location-picker").then((mod) => ({ default: mod.LocationPicker })),
@@ -30,8 +31,14 @@ export default function BoletimPage() {
   const [anonymous, setAnonymous] = useState(true)
   const [showSuccess, setShowSuccess] = useState(false)
   const [location, setLocation] = useState("")
+  const [date, setDate] = useState("")
+  const [description, setDescription] = useState("")
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const { suggestions, searchAddress } = useAddressSearch()
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -40,7 +47,6 @@ export default function BoletimPage() {
           setUserLocation([position.coords.latitude, position.coords.longitude])
         },
         () => {
-          // Default to São Paulo
           setUserLocation([-23.5505, -46.6333])
         },
       )
@@ -54,8 +60,47 @@ export default function BoletimPage() {
     setLocation(address)
   }
 
+  const handleAddressChange = (value: string) => {
+    setLocation(value)
+    setShowAddressSuggestions(true)
+    searchAddress(value)
+    if (errors.location) {
+      setErrors({ ...errors, location: "" })
+    }
+  }
+
+  const handleSelectSuggestion = (suggestion: any) => {
+    setLocation(suggestion.address)
+    setSelectedCoords({ lat: suggestion.lat, lng: suggestion.lng })
+    setShowAddressSuggestions(false)
+  }
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (!location.trim()) {
+      newErrors.location = "Endereço aproximado é obrigatório"
+    }
+
+    if (!date) {
+      newErrors.date = "Data é obrigatória"
+    }
+
+    if (!description.trim()) {
+      newErrors.description = "Descrição detalhada é obrigatória"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
     setShowSuccess(true)
   }
 
@@ -69,7 +114,7 @@ export default function BoletimPage() {
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold text-white">Boletim de Occrrência</h1>
+          <h1 className="text-xl font-bold text-white">Boletim de Ocorrência</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 space-y-6">
@@ -86,18 +131,52 @@ export default function BoletimPage() {
             )}
           </div>
 
-          {/* Address */}
-          <div>
+          {/* Address with Search */}
+          <div className="relative">
             <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               Endereço aproximado
+              <span className="text-red-500">*</span>
             </label>
-            <Input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Toque no mapa ou digite o endereço..."
-              className="bg-[#1a1625] border-[#2b2438] text-white"
-            />
+            <div className="relative">
+              <Input
+                value={location}
+                onChange={(e) => handleAddressChange(e.target.value)}
+                onFocus={() => setShowAddressSuggestions(true)}
+                placeholder="Toque no mapa ou digite o endereço..."
+                className={`bg-[#1a1625] border-[#2b2438] text-white ${errors.location ? "border-red-500" : ""}`}
+              />
+              {location && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocation("")
+                    setShowAddressSuggestions(false)
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {showAddressSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1625] border border-[#2b2438] rounded-xl overflow-hidden z-10 shadow-lg">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.id}
+                    type="button"
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    className="w-full px-4 py-3 text-left text-sm text-white hover:bg-[#2b2438] transition-colors border-b border-[#2b2438] last:border-b-0"
+                  >
+                    <div className="font-medium truncate">{suggestion.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{suggestion.address}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
           </div>
 
           {/* Date */}
@@ -105,17 +184,42 @@ export default function BoletimPage() {
             <label className="text-sm text-muted-foreground mb-2 block flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Data Completo
+              <span className="text-red-500">*</span>
             </label>
-            <Input type="datetime-local" className="bg-[#1a1625] border-[#2b2438] text-white" />
+            <Input
+              type="datetime-local"
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value)
+                if (errors.date) {
+                  setErrors({ ...errors, date: "" })
+                }
+              }}
+              className={`bg-[#1a1625] border-[#2b2438] text-white ${errors.date ? "border-red-500" : ""}`}
+            />
+            {errors.date && <p className="text-xs text-red-500 mt-1">{errors.date}</p>}
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-sm text-white mb-2 block">Descrição Detalhada da Ocorrência</label>
+            <label className="text-sm text-white mb-2 block flex items-center gap-2">
+              Descrição Detalhada da Ocorrência
+              <span className="text-red-500">*</span>
+            </label>
             <Textarea
               placeholder="Descreva o que aconteceu com o máximo de detalhes possível..."
-              className="bg-[#1a1625] border-[#2b2438] text-white min-h-32"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value)
+                if (errors.description) {
+                  setErrors({ ...errors, description: "" })
+                }
+              }}
+              className={`bg-[#1a1625] border-[#2b2438] text-white min-h-32 ${
+                errors.description ? "border-red-500" : ""
+              }`}
             />
+            {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
           </div>
 
           {/* Photo Upload */}

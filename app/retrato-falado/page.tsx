@@ -36,6 +36,7 @@ export default function RetratoFaladoPage() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState<PortraitData>({
     sex: "",
     age: "",
@@ -59,6 +60,24 @@ export default function RetratoFaladoPage() {
   const handleInputChange = (field: keyof PortraitData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     setError(null)
+    if (fieldErrors[field]) {
+      setFieldErrors({ ...fieldErrors, [field]: "" })
+    }
+  }
+
+  const validateRequiredFields = (): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.sex) newErrors.sex = "Sexo é obrigatório"
+    if (!formData.skinTone) newErrors.skinTone = "Tom de pele é obrigatório"
+    if (!formData.faceShape) newErrors.faceShape = "Formato do rosto é obrigatório"
+    if (!formData.eyeColor) newErrors.eyeColor = "Cor dos olhos é obrigatória"
+    if (!formData.eyeShape) newErrors.eyeShape = "Formato dos olhos é obrigatório"
+    if (!formData.noseShape) newErrors.noseShape = "Formato do nariz é obrigatório"
+    if (!formData.mouthShape) newErrors.mouthShape = "Formato da boca é obrigatório"
+
+    setFieldErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const buildPrompt = (): string => {
@@ -89,14 +108,14 @@ export default function RetratoFaladoPage() {
     e.preventDefault()
     setError(null)
     setSuccessMessage(null)
-    setGenerating(true)
-    setGenerationProgress(0)
 
-    if (!formData.sex) {
-      setError("Por favor, selecione o sexo")
-      setGenerating(false)
+    if (!validateRequiredFields()) {
+      setError("Por favor, preencha todos os campos obrigatórios marcados com *")
       return
     }
+
+    setGenerating(true)
+    setGenerationProgress(0)
 
     try {
       const prompt = buildPrompt()
@@ -332,7 +351,7 @@ export default function RetratoFaladoPage() {
                   formData.sex === "masculino"
                     ? "border-[#4aa3ff] bg-[#4aa3ff]/10"
                     : "border-[#2b2438] hover:border-[#4aa3ff]/50"
-                }`}
+                } ${fieldErrors.sex ? "border-red-500" : ""}`}
               >
                 Masculino
               </button>
@@ -343,11 +362,12 @@ export default function RetratoFaladoPage() {
                   formData.sex === "feminino"
                     ? "border-[#4aa3ff] bg-[#4aa3ff]/10"
                     : "border-[#2b2438] hover:border-[#4aa3ff]/50"
-                }`}
+                } ${fieldErrors.sex ? "border-red-500" : ""}`}
               >
                 Feminino
               </button>
             </div>
+            {fieldErrors.sex && <p className="text-xs text-red-500 mt-1">{fieldErrors.sex}</p>}
           </div>
 
           <div>
@@ -366,13 +386,15 @@ export default function RetratoFaladoPage() {
 
           <div>
             <Label htmlFor="skinTone" className="text-sm text-white mb-2 block">
-              Tom de Pele
+              Tom de Pele <span className="text-red-500">*</span>
             </Label>
             <select
               id="skinTone"
               value={formData.skinTone}
               onChange={(e) => handleInputChange("skinTone", e.target.value)}
-              className="w-full bg-[#1a1625] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+              className={`w-full bg-[#1a1625] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                fieldErrors.skinTone ? "border-red-500" : "border-[#2b2438]"
+              }`}
             >
               <option value="">Selecione...</option>
               <option value="muito clara">Muito Clara</option>
@@ -382,17 +404,20 @@ export default function RetratoFaladoPage() {
               <option value="escura">Escura</option>
               <option value="muito escura">Muito Escura</option>
             </select>
+            {fieldErrors.skinTone && <p className="text-xs text-red-500 mt-1">{fieldErrors.skinTone}</p>}
           </div>
 
           <div>
             <Label htmlFor="faceShape" className="text-sm text-white mb-2 block">
-              Formato do Rosto
+              Formato do Rosto <span className="text-red-500">*</span>
             </Label>
             <select
               id="faceShape"
               value={formData.faceShape}
               onChange={(e) => handleInputChange("faceShape", e.target.value)}
-              className="w-full bg-[#1a1625] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+              className={`w-full bg-[#1a1625] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                fieldErrors.faceShape ? "border-red-500" : "border-[#2b2438]"
+              }`}
             >
               <option value="">Selecione...</option>
               <option value="oval">Oval</option>
@@ -402,6 +427,7 @@ export default function RetratoFaladoPage() {
               <option value="alongado">Alongado</option>
               <option value="coração">Coração</option>
             </select>
+            {fieldErrors.faceShape && <p className="text-xs text-red-500 mt-1">{fieldErrors.faceShape}</p>}
           </div>
 
           <div className="space-y-4 bg-[#1a1625] border border-[#2b2438] rounded-xl p-4">
@@ -470,13 +496,15 @@ export default function RetratoFaladoPage() {
 
             <div>
               <Label htmlFor="eyeColor" className="text-sm text-white mb-2 block">
-                Cor dos Olhos
+                Cor dos Olhos <span className="text-red-500">*</span>
               </Label>
               <select
                 id="eyeColor"
                 value={formData.eyeColor}
                 onChange={(e) => handleInputChange("eyeColor", e.target.value)}
-                className="w-full bg-[#0f0b1a] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+                className={`w-full bg-[#0f0b1a] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                  fieldErrors.eyeColor ? "border-red-500" : "border-[#2b2438]"
+                }`}
               >
                 <option value="">Selecione...</option>
                 <option value="castanhos escuros">Castanhos Escuros</option>
@@ -487,17 +515,20 @@ export default function RetratoFaladoPage() {
                 <option value="cinzas">Cinzas</option>
                 <option value="mel">Mel</option>
               </select>
+              {fieldErrors.eyeColor && <p className="text-xs text-red-500 mt-1">{fieldErrors.eyeColor}</p>}
             </div>
 
             <div>
               <Label htmlFor="eyeShape" className="text-sm text-white mb-2 block">
-                Formato dos Olhos
+                Formato dos Olhos <span className="text-red-500">*</span>
               </Label>
               <select
                 id="eyeShape"
                 value={formData.eyeShape}
                 onChange={(e) => handleInputChange("eyeShape", e.target.value)}
-                className="w-full bg-[#0f0b1a] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+                className={`w-full bg-[#0f0b1a] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                  fieldErrors.eyeShape ? "border-red-500" : "border-[#2b2438]"
+                }`}
               >
                 <option value="">Selecione...</option>
                 <option value="amendoados">Amendoados</option>
@@ -506,18 +537,21 @@ export default function RetratoFaladoPage() {
                 <option value="caídos">Caídos</option>
                 <option value="encapuzados">Encapuzados</option>
               </select>
+              {fieldErrors.eyeShape && <p className="text-xs text-red-500 mt-1">{fieldErrors.eyeShape}</p>}
             </div>
           </div>
 
           <div>
             <Label htmlFor="noseShape" className="text-sm text-white mb-2 block">
-              Formato do Nariz
+              Formato do Nariz <span className="text-red-500">*</span>
             </Label>
             <select
               id="noseShape"
               value={formData.noseShape}
               onChange={(e) => handleInputChange("noseShape", e.target.value)}
-              className="w-full bg-[#1a1625] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+              className={`w-full bg-[#1a1625] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                fieldErrors.noseShape ? "border-red-500" : "border-[#2b2438]"
+              }`}
             >
               <option value="">Selecione...</option>
               <option value="fino">Fino</option>
@@ -527,17 +561,20 @@ export default function RetratoFaladoPage() {
               <option value="arrebitado">Arrebitado</option>
               <option value="achatado">Achatado</option>
             </select>
+            {fieldErrors.noseShape && <p className="text-xs text-red-500 mt-1">{fieldErrors.noseShape}</p>}
           </div>
 
           <div>
             <Label htmlFor="mouthShape" className="text-sm text-white mb-2 block">
-              Formato da Boca
+              Formato da Boca <span className="text-red-500">*</span>
             </Label>
             <select
               id="mouthShape"
               value={formData.mouthShape}
               onChange={(e) => handleInputChange("mouthShape", e.target.value)}
-              className="w-full bg-[#1a1625] border border-[#2b2438] text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff]"
+              className={`w-full bg-[#1a1625] border text-white rounded-xl p-3 focus:outline-none focus:border-[#4aa3ff] ${
+                fieldErrors.mouthShape ? "border-red-500" : "border-[#2b2438]"
+              }`}
             >
               <option value="">Selecione...</option>
               <option value="lábios finos">Lábios Finos</option>
@@ -546,6 +583,7 @@ export default function RetratoFaladoPage() {
               <option value="boca pequena">Boca Pequena</option>
               <option value="boca grande">Boca Grande</option>
             </select>
+            {fieldErrors.mouthShape && <p className="text-xs text-red-500 mt-1">{fieldErrors.mouthShape}</p>}
           </div>
 
           {formData.sex === "masculino" && (
@@ -680,8 +718,9 @@ export default function RetratoFaladoPage() {
 
             <div className="border-t border-[#2b2438] pt-3">
               <p className="text-xs text-muted-foreground">
-                <strong className="text-white">Dica:</strong> Preencha o máximo de campos possível, especialmente sexo,
-                idade, tom de pele, formato do rosto e características do cabelo para obter os melhores resultados.
+                <strong className="text-white">Dica:</strong> Preencha os campos obrigatórios (marcados com{" "}
+                <span className="text-red-500">*</span>), especialmente sexo, tom de pele, formato do rosto, cores e
+                formatos dos olhos e nariz para obter os melhores resultados.
               </p>
             </div>
           </div>
