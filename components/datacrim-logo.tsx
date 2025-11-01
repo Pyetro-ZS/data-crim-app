@@ -14,7 +14,7 @@ export function DataCrimLogo({ size = "medium", useIconLogo = false }: DataCrimL
 
   const { width, height } = dimensions[size]
 
-  const logoSrc = useIconLogo ? "/icon-logo.png" : "/logo.png"
+  const logoSrc = useIconLogo ? "/logo.png" : "/logo.png"
   const borderRadiusClass = useIconLogo ? "rounded-lg" : ""
 
   return (
