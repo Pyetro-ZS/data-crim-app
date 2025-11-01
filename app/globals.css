@@ -140,8 +140,13 @@ link[rel="icon"] {
   background: linear-gradient(135deg, #7c3aed 0%, #4aa3ff 100%);
 }
 
-/* Touch-friendly button styles */
 .btn-touch {
   min-height: 56px;
   min-width: 44px;
+}
+
+.favicon {
+  border-radius: 50%; 
+  object-fit: cover;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
