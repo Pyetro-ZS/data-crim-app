@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <link rel="icon" href="/icon-logo.png" />
+      <link rel="icon" href="/icon-logo.png" style="width:500px;height:500px;border-radius:25%;overflow:hidden; />
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <ErrorBoundary>
           <ThemeProvider>
