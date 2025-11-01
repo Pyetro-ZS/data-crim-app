@@ -120,6 +120,17 @@
   }
 }
 
+link[rel="icon"] {
+  filter: drop-shadow(0 0 2px #0003);
+  transition: filter 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  link[rel="icon"] {
+    filter: brightness(0.8);
+  }
+}
+
 /* Custom gradient utilities */
 .gradient-primary {
   background: linear-gradient(135deg, #4aa3ff 0%, #2b6ef6 100%);
