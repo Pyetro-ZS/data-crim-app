@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "DataCrim - Segurança e Denúncia Inteligente",
   description: "Plataforma de denúncia de crimes e segurança pública com IA",
   icon: {
-    icon: "../public/icon-logo.png",
+    icon: "/icon-logo.png",
   },
 }
 
