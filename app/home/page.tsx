@@ -38,9 +38,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#0f0b1a] p-6">
       <div className="max-w-md mx-auto">
-        {/* Logo */}
+        {/* Logo - Updated to use icon-logo variant */}
         <div className="flex flex-col items-center mb-12 mt-8">
-          <DataCrimLogo size="medium" />
+          <DataCrimLogo size="medium" useIconLogo />
         </div>
 
         {/* Menu Cards */}
