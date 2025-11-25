@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/error-boundary"
 export const metadata: Metadata = {
   title: "DataCrim - Segurança e Denúncia Inteligente",
   description: "Plataforma de denúncia de crimes e segurança pública com IA",
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

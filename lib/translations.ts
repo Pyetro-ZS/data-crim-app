@@ -15,15 +15,15 @@ export const translations = {
 
     // Home
     homeTitle: "DataCrim",
-    policiaCall: "Ligação Polícia Civil",
+    policiaCall: "Ligação Polícia Militar",
     boletim: "Boletim de Ocorrência",
     retratoFalado: "Retrato Falado (IA)",
     mapeamento: "Mapeamento do Local",
 
-    // Policia Civil
-    policiaCivilTitle: "Ligação Polícia Civil",
-    call197: "Ligar 197",
-    aboutPolice: "Sobre a Polícia Civil",
+    // Policia Militar
+    policiaMilitarTitle: "Ligação Polícia Militar",
+    call190: "Ligar 190",
+    aboutPolice: "Sobre a Polícia Militar",
     help: "Ajuda",
     settings: "Configurações",
 
@@ -151,15 +151,15 @@ export const translations = {
 
     // Home
     homeTitle: "DataCrim",
-    policiaCall: "Civil Police Call",
+    policiaCall: "Military Police Call",
     boletim: "Incident Report",
     retratoFalado: "AI Portrait",
     mapeamento: "Location Mapping",
 
-    // Policia Civil
-    policiaCivilTitle: "Civil Police Call",
-    call197: "Call 197",
-    aboutPolice: "About Civil Police",
+    // Policia Militar
+    policiaMilitarTitle: "Military Police Call",
+    call190: "Call 190",
+    aboutPolice: "About Military Police",
     help: "Help",
     settings: "Settings",
 
@@ -287,15 +287,15 @@ export const translations = {
 
     // Home
     homeTitle: "DataCrim",
-    policiaCall: "Llamada Policía Civil",
+    policiaCall: "Llamada Policía Militar",
     boletim: "Informe de Incidente",
     retratoFalado: "Retrato IA",
     mapeamento: "Mapeo de Ubicación",
 
-    // Policia Civil
-    policiaCivilTitle: "Llamada Policía Civil",
-    call197: "Llamar 197",
-    aboutPolice: "Sobre la Policía Civil",
+    // Policia Militar
+    policiaMilitarTitle: "Llamada Policía Militar",
+    call190: "Llamar 190",
+    aboutPolice: "Sobre la Policía Militar",
     help: "Ayuda",
     settings: "Configuración",
 
